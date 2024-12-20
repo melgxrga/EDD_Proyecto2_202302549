@@ -1,0 +1,16 @@
+digraph G {
+rankdir=LR;
+node [shape=record];
+"1895666617136" [label="{<prev> | DPI: 123456789\nNombre: Juan | <next>}"];
+"1895666617184" [label="{<prev> | DPI: 456789123\nNombre: Carlos | <next>}"];
+"1895666617232" [label="{<prev> | DPI: 654321987\nNombre: Ana | <next>}"];
+"1895666617328" [label="{<prev> | DPI: 987654321\nNombre: María | <next>}"];
+"1895666617136":next -> "1895666617184":prev;
+"1895666617184":prev -> "1895666617136":next;
+"1895666617184":next -> "1895666617232":prev;
+"1895666617232":prev -> "1895666617184":next;
+"1895666617232":next -> "1895666617328":prev;
+"1895666617328":prev -> "1895666617232":next;
+"1895666617328":next -> "1895666617136":prev [constraint=false];
+"1895666617136":prev -> "1895666617328":next [constraint=false];
+}
