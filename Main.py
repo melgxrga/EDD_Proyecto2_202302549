@@ -14,11 +14,30 @@ from viajes import ViajesFrame
 
 from BTree import BTree
 from controllers.vehiculos_controller import VehiculosController  # Importar VehiculosController directamente
+from structures.listaAdyacencia import listaAdyacencia
+from structures.lista_enlazada import Vertice  # Importar Vertice
+
 
 def show_frame(frame):
     frame.tkraise()
 
 def main():
+        # Crear la lista de adyacencia
+    lista_adyacencia = listaAdyacencia()
+    
+    # Insertar vértices en la lista de adyacencia
+    lista_adyacencia.insertar("A", "B")
+    lista_adyacencia.insertar("A", "C")
+    
+    # Imprimir los vecinos del vértice "A"
+    resultado = lista_adyacencia.vertices.buscar(Vertice("A"))
+    if resultado:
+        print(f"Vecinos de {resultado.data.valor}:")
+        current = resultado.data.vecinos.head
+        while current:
+            print(current.data.valor)
+            current = current.next
+            
     root = tk.Tk()
     root.title("Mi aplicación Tkinter")
     window_width = 1500

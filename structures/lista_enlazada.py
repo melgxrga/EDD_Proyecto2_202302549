@@ -4,7 +4,11 @@ class Node:
         self.next = None
         self.prev = None
         
-        
+class Vertice:
+    def __init__(self, valor):
+        self.valor = valor
+        self.vecinos = LinkedList()
+
 class LinkedList:
     def __init__(self):
         self.head = None
@@ -51,3 +55,23 @@ class LinkedList:
     
     def size(self):
         return self._size
+    
+    def insertar_al_final(self, vertice) -> Node:
+        new_node = Node(vertice)
+        if not self.head:
+            self.head = new_node
+            self.tail = new_node
+        else:
+            new_node.prev = self.tail
+            self.tail.next = new_node
+            self.tail = new_node
+        self._size += 1
+        return new_node
+    
+    def buscar(self, vertice: Vertice):
+        current = self.head
+        while current:
+            if current.data.valor == vertice.valor:
+                return current
+            current = current.next
+        return None
