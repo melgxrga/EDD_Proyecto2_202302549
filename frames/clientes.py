@@ -51,6 +51,7 @@ class ClientesFrame(tk.Frame):
             acciones_frame, text="Eliminar Cliente", command=self.eliminar_cliente_gui, bg='#4CAF50', fg="white"
         )
         eliminar_button.grid(row=0, column=2, padx=5)
+        
 
         # Botón para Mostrar Información
         mostrar_info_button = tk.Button(

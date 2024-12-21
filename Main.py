@@ -3,13 +3,17 @@ from PIL import Image, ImageTk
 import sys
 import os
 
-# Agregar la carpeta 'frames' y 'controllers' al path para importar los módulos
+# Agregar las carpetas 'frames', 'controllers' y 'structures' al path para importar los módulos
 sys.path.append(os.path.join(os.path.dirname(__file__), 'frames'))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'controllers'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'structures'))
 
 from clientes import ClientesFrame
 from vehiculos import VehiculosFrame
 from viajes import ViajesFrame
+
+from BTree import BTree
+from controllers.vehiculos_controller import VehiculosController  # Importar VehiculosController directamente
 
 def show_frame(frame):
     frame.tkraise()
@@ -44,9 +48,16 @@ def main():
     inicio_background_label = tk.Label(inicio_frame, image=background_image)
     inicio_background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-    # Crear instancias de cada frame
+    # Crear instancia del árbol B de orden 5
+    orden_arbol = 5
+    arbol = BTree(orden_arbol)
+
+    # Crear instancia del controlador de vehículos y pasarle el árbol B
+    vehiculos_controller = VehiculosController(arbol)
+
+    # Crear instancias de cada frame y pasar el controlador de vehículos
     clientes_frame = ClientesFrame(container)
-    vehiculos_frame = VehiculosFrame(container)
+    vehiculos_frame = VehiculosFrame(container, vehiculos_controller)
     viajes_frame = ViajesFrame(container)
 
     for frame in (inicio_frame, clientes_frame, vehiculos_frame, viajes_frame):
@@ -70,6 +81,7 @@ def main():
     vehiculos_menu = tk.Menu(menu_bar, tearoff=0)
     vehiculos_menu.add_command(label="Ver Vehículos", command=lambda: show_frame(vehiculos_frame))
     vehiculos_menu.add_command(label="Agregar Vehículo", command=lambda: show_frame(vehiculos_frame))
+    vehiculos_menu.add_command(label="Cargar Vehículos desde TXT", command=vehiculos_frame.cargar_vehiculos_txt)  # Añadir opción para cargar desde TXT
     menu_bar.add_cascade(label="Vehículos", menu=vehiculos_menu)
     
     # Menú Viajes

@@ -1,131 +1,95 @@
 from NodoArbolB import NodoArbolB
 from graphviz import Digraph
-import os
+from structures.datos_vehiculo import DatosVehiculo
 
-class ArbolB:
+class BTree:
     def __init__(self, orden: int):
-        self.raiz: NodoArbolB = NodoArbolB(True)
-        self.orden: int = orden
+        self.orden = orden
+        self.raiz = NodoArbolB(True)
 
-    def insertar_valor(self, valor: int):
+    def insertar_valor(self, vehiculo: DatosVehiculo):
+        """
+        Inserta un vehículo en el árbol B basado en su placa.
+        """
         raiz: NodoArbolB = self.raiz
-        self.insertar_valor_no_completo(raiz, valor)
+        self.insertar_valor_no_completo(raiz, vehiculo)
         if len(raiz.claves) > self.orden - 1:
             nodo: NodoArbolB = NodoArbolB(False)
             self.raiz = nodo
             nodo.hijos.insert(0, raiz)
             self.dividir_pagina(nodo, 0)
 
-    def insertar_valor_no_completo(self, raiz: NodoArbolB, valor: int):
+    def insertar_valor_no_completo(self, raiz: NodoArbolB, vehiculo: DatosVehiculo):
         posicion = len(raiz.claves) - 1
         if raiz.hoja:
-            raiz.claves.append(None)
-            while posicion >= 0 and valor < raiz.claves[posicion]:
+            raiz.claves.append(None)  # Espacio para el nuevo vehículo
+            # Mover las claves mayores hacia la derecha
+            while posicion >= 0 and vehiculo.placa < raiz.claves[posicion].placa:
                 raiz.claves[posicion + 1] = raiz.claves[posicion]
                 posicion -= 1
-            raiz.claves[posicion + 1] = valor
+            raiz.claves[posicion + 1] = vehiculo
         else:
-            while posicion >= 0 and valor < raiz.claves[posicion]:
+            # Encontrar el hijo adecuado para la inserción
+            while posicion >= 0 and vehiculo.placa < raiz.claves[posicion].placa:
                 posicion -= 1
             posicion += 1
-            self.insertar_valor_no_completo(raiz.hijos[posicion], valor)
+            self.insertar_valor_no_completo(raiz.hijos[posicion], vehiculo)
+            # Si el hijo está completo, dividirlo
             if len(raiz.hijos[posicion].claves) > self.orden - 1:
                 self.dividir_pagina(raiz, posicion)
 
     def dividir_pagina(self, raiz: NodoArbolB, posicion: int):
+        """
+        Divide una página del árbol B cuando está lleno.
+        """
         posicion_media: int = (self.orden - 1) // 2
         hijo: NodoArbolB = raiz.hijos[posicion]
         nodo: NodoArbolB = NodoArbolB(hijo.hoja)
 
+        # Insertar el nuevo hijo en el árbol
         raiz.hijos.insert(posicion + 1, nodo)
+        # Mover la clave del medio al nodo padre
         raiz.claves.insert(posicion, hijo.claves[posicion_media])
+        # Dividir las claves entre los dos nodos
         nodo.claves = hijo.claves[posicion_media + 1:]
         hijo.claves = hijo.claves[:posicion_media]
 
+        # Si el nodo no es una hoja, dividir también los hijos
         if not hijo.hoja:
             nodo.hijos = hijo.hijos[posicion_media + 1:]
             hijo.hijos = hijo.hijos[:posicion_media + 1]
 
-    def imprimir_usuario(self) -> str:
-        dot = 'digraph G {\n\tbgcolor="#1A1A1A";\n\t'
-        dot += 'fontcolor=white;\n\tnodesep=0.5;\n\tsplines=false;\n\t'
-        dot += 'node [shape=record width=1.2 style=filled fillcolor="#313638" '
-        dot += 'fontcolor=white color=transparent];\n\t'
-        dot += 'edge [fontcolor=white color="#007CC9"];\n\t'
-        dot += self.imprimir(self.raiz)
-        dot += "\n}"
-        return dot
-
-    def imprimir(self, nodo: NodoArbolB, id: list[int] = [0]) -> str:
-        raiz = nodo
-        arbol = f'n{id[0]}[label="'
-        contador = 0
-
-        for item in raiz.claves:
-            if contador == len(raiz.claves) - 1:
-                arbol += f"<f{contador}>|{item}|<f{contador + 1}>"
-                break
-            arbol += f"<f{contador}>|{item}|"
-            contador += 1
-
-        arbol += '"];\n\t'
-        contador = 0
-        id_padre = id[0]
-
-        for item in raiz.hijos:
-            # Add edge from parent to child
-            arbol += f'n{id_padre}:f{contador}->n{id[0] + 1};\n\t'
-            id[0] += 1
-            arbol += self.imprimir(item, id)
-            contador += 1
-
-        return arbol
-
-    def __str__(self):
-        return f"{self.raiz}"
-
     def visualize(self, filename='btree_final'):
         dot = Digraph(comment='B-Tree')
-        dot.attr(rankdir='TB')
+        dot.attr(rankdir='TB', bgcolor="#1A1A1A", fontcolor="white")
         
         def add_nodes(node, node_id):
-            # Crear etiqueta de nodo
-            keys = [f"({k[0]},{k[1]})" for k in node.claves]
+            # Crear etiqueta de nodo con las placas de los vehículos
+            keys = [k.placa for k in node.claves]
             label = " | ".join(keys)
-            dot.node(str(node_id), label, shape='record')
+            dot.node(str(node_id), label, shape='record', style='filled', fillcolor="#313638", fontcolor="white")
             
             # Agregar hijos y aristas
             if not node.hoja:
                 for i, child in enumerate(node.hijos):
                     child_id = f"{node_id}_{i}"
                     add_nodes(child, child_id)
-                    dot.edge(str(node_id), child_id)
+                    dot.edge(str(node_id), str(child_id), color="#007CC9", fontcolor="white")
         
         add_nodes(self.raiz, "root")
         dot.render(filename, view=False, format='png')
         print(f"B-tree visualization saved as {filename}.png")
+        
+    def buscar_valor(self, placa: str):
+        return self.buscar_valor_en_nodo(self.raiz, placa)
 
-def main() -> None:
-    arbolB = ArbolB(5)  # Crear árbol B de orden 5
-
-    while True:
-        try:
-            valor: int = int(input("Ingrese un valor: "))
-        except ValueError:
-            print("Por favor, ingrese un número válido.")
-            continue
-
-        if valor == -1:
-            print(arbolB.imprimir_usuario())
-            continue
-
-        if valor == -2:
-            arbolB.visualize('btree_final')  # Generar visualización final
-            break
-
-        arbolB.insertar_valor(valor)
-        # Opcional: Puedes imprimir el árbol después de cada inserción
-        # arbolB.print_tree(arbolB.raiz)  # Asegúrate de tener este método
-
-if __name__ == '__main__':
-    main()
+    def buscar_valor_en_nodo(self, nodo: NodoArbolB, placa: str):
+        i = 0
+        while i < len(nodo.claves) and placa > nodo.claves[i].placa:
+            i += 1
+        if i < len(nodo.claves) and placa == nodo.claves[i].placa:
+            return nodo.claves[i]
+        elif nodo.hoja:
+            return None
+        else:
+            return self.buscar_valor_en_nodo(nodo.hijos[i], placa)
