@@ -11,33 +11,29 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'structures'))
 from clientes import ClientesFrame
 from vehiculos import VehiculosFrame
 from viajes import ViajesFrame
+from rutas import RutasFrame
 
 from BTree import BTree
 from controllers.vehiculos_controller import VehiculosController  # Importar VehiculosController directamente
+from controllers.rutas_controller import RutasController  # Importar RutasController
 from structures.listaAdyacencia import listaAdyacencia
 from structures.lista_enlazada import Vertice  # Importar Vertice
-
 
 def show_frame(frame):
     frame.tkraise()
 
 def main():
-        # Crear la lista de adyacencia
-    lista_adyacencia = listaAdyacencia()
-    
-    # Insertar vértices en la lista de adyacencia
-    lista_adyacencia.insertar("A", "B")
-    lista_adyacencia.insertar("A", "C")
-    
-    # Imprimir los vecinos del vértice "A"
-    resultado = lista_adyacencia.vertices.buscar(Vertice("A"))
-    if resultado:
-        print(f"Vecinos de {resultado.data.valor}:")
-        current = resultado.data.vecinos.head
-        while current:
-            print(current.data.valor)
-            current = current.next
             
+    # Crear instancia del árbol B de orden 5
+    orden_arbol = 5
+    arbol = BTree(orden_arbol)
+
+    # Crear instancia del controlador de vehículos y pasarle el árbol B
+    vehiculos_controller = VehiculosController(arbol)
+
+    # Crear instancia del controlador de rutas
+    rutas_controller = RutasController()
+
     root = tk.Tk()
     root.title("Mi aplicación Tkinter")
     window_width = 1500
@@ -67,19 +63,13 @@ def main():
     inicio_background_label = tk.Label(inicio_frame, image=background_image)
     inicio_background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-    # Crear instancia del árbol B de orden 5
-    orden_arbol = 5
-    arbol = BTree(orden_arbol)
-
-    # Crear instancia del controlador de vehículos y pasarle el árbol B
-    vehiculos_controller = VehiculosController(arbol)
-
-    # Crear instancias de cada frame y pasar el controlador de vehículos
+    # Crear instancias de cada frame y pasar el controlador de vehículos y rutas
     clientes_frame = ClientesFrame(container)
     vehiculos_frame = VehiculosFrame(container, vehiculos_controller)
+    rutas_frame = RutasFrame(container, rutas_controller)
     viajes_frame = ViajesFrame(container)
 
-    for frame in (inicio_frame, clientes_frame, vehiculos_frame, viajes_frame):
+    for frame in (inicio_frame, clientes_frame, vehiculos_frame, rutas_frame, viajes_frame):
         frame.place(relwidth=1, relheight=1)
 
     # Crear la barra de menú
@@ -102,6 +92,13 @@ def main():
     vehiculos_menu.add_command(label="Agregar Vehículo", command=lambda: show_frame(vehiculos_frame))
     vehiculos_menu.add_command(label="Cargar Vehículos desde TXT", command=vehiculos_frame.cargar_vehiculos_txt)  # Añadir opción para cargar desde TXT
     menu_bar.add_cascade(label="Vehículos", menu=vehiculos_menu)
+    
+    # Menú Rutas
+    rutas_menu = tk.Menu(menu_bar, tearoff=0)
+    rutas_menu.add_command(label="Ver Rutas", command=lambda: show_frame(rutas_frame))
+    rutas_menu.add_command(label="Agregar Ruta", command=lambda: show_frame(rutas_frame))
+    rutas_menu.add_command(label="Cargar Rutas desde TXT", command=rutas_frame.cargar_rutas_txt)  # Añadir opción para cargar desde TXT
+    menu_bar.add_cascade(label="Rutas", menu=rutas_menu)
     
     # Menú Viajes
     viajes_menu = tk.Menu(menu_bar, tearoff=0)

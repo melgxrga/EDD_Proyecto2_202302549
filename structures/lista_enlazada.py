@@ -1,6 +1,7 @@
 class Node:
-    def __init__(self, data=None):
+    def __init__(self, data=None, tiempo=None):
         self.data = data
+        self.tiempo = tiempo
         self.next = None
         self.prev = None
         
@@ -15,8 +16,8 @@ class LinkedList:
         self.tail = None
         self._size = 0
     
-    def add(self, data):
-        new_node = Node(data)
+    def add(self, data, tiempo):
+        new_node = Node(data, tiempo)
         if not self.head:
             self.head = new_node
             self.tail = new_node
@@ -56,8 +57,8 @@ class LinkedList:
     def size(self):
         return self._size
     
-    def insertar_al_final(self, vertice) -> Node:
-        new_node = Node(vertice)
+    def insertar_al_final(self, vertice, tiempo) -> Node:
+        new_node = Node(vertice, tiempo)
         if not self.head:
             self.head = new_node
             self.tail = new_node
