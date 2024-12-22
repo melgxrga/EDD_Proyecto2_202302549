@@ -1,5 +1,6 @@
 from structures.listaAdyacencia import listaAdyacencia
 from structures.datos_ruta import Ruta
+import os
 
 class RutasController:
     def __init__(self):
@@ -39,3 +40,17 @@ class RutasController:
         for origen, vecinos in rutas:
             for destino, tiempo in vecinos:
                 print(f"{origen} -> {destino} : {tiempo} minutos")
+                
+    def generar_graphviz(self, filename="rutas.dot"):
+        """Genera un archivo DOT para representar el grafo de rutas no dirigido."""
+        rutas = self.obtener_rutas()
+        with open(filename, 'w') as file:
+            file.write("graph G {\n")
+            file.write("    node [shape=circle, width=0.1, height=0.1, fontsize=10, label=\"\"];\n")
+            for origen, vecinos in rutas:
+                file.write(f'    "{origen}" [xlabel="{origen}", labelloc="t"];\n')
+                for destino, tiempo in vecinos:
+                    file.write(f'    "{destino}" [xlabel="{destino}", labelloc="t"];\n')
+                    file.write(f'    "{origen}" -- "{destino}" [label="{tiempo}"];\n')
+            file.write("}\n")
+        print(f"Archivo DOT generado: {filename}")

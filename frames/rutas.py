@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, Toplevel
 from controllers.rutas_controller import RutasController
+import os
 
 class RutasFrame(tk.Frame):
     def __init__(self, parent, controller):
@@ -14,6 +15,12 @@ class RutasFrame(tk.Frame):
             self, text="Cargar Rutas desde TXT", command=self.cargar_rutas_txt, bg='#4CAF50', fg="white"
         )
         cargar_txt_button.pack(pady=5)
+        
+        # Botón para generar Graphviz
+        generar_graphviz_button = tk.Button(
+            self, text="Generar Graphviz", command=self.generar_graphviz, bg='#4CAF50', fg="white"
+        )
+        generar_graphviz_button.pack(pady=5)
                 
         # Frame para agrupar los botones de acciones
         acciones_frame = tk.Frame(self, bg='#2e2e2e')
@@ -79,6 +86,12 @@ class RutasFrame(tk.Frame):
             messagebox.showinfo("Éxito", "Rutas cargadas e insertadas correctamente en la lista de adyacencia.")
         except Exception as e:
             messagebox.showerror("Error", f"Ha ocurrido un error al cargar las rutas: {e}")
+
+    def generar_graphviz(self):
+        """Genera el archivo DOT y lo convierte a una imagen usando neato."""
+        self.controller.generar_graphviz()
+        os.system("neato -Tpng rutas.dot -o rutas.png")
+        messagebox.showinfo("Éxito", "Archivo Graphviz generado correctamente.")
 
     def crear_ruta_gui(self):
         self.mostrar_formulario(None, self.controller.crear_ruta)

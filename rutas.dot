@@ -1,0 +1,26 @@
+graph G {
+    node [shape=circle, width=0.1, height=0.1, fontsize=10, label=""];
+    "Oviedo" [xlabel="Oviedo", labelloc="t"];
+    "Bilbao" [xlabel="Bilbao", labelloc="t"];
+    "Oviedo" -- "Bilbao" [label="304"];
+    "Bilbao" [xlabel="Bilbao", labelloc="t"];
+    "Zaragoza" [xlabel="Zaragoza", labelloc="t"];
+    "Bilbao" -- "Zaragoza" [label="324"];
+    "Madrid" [xlabel="Madrid", labelloc="t"];
+    "Bilbao" -- "Madrid" [label="395"];
+    "Valladolid" [xlabel="Valladolid", labelloc="t"];
+    "Bilbao" -- "Valladolid" [label="280"];
+    "Zaragoza" [xlabel="Zaragoza", labelloc="t"];
+    "Barcelona" [xlabel="Barcelona", labelloc="t"];
+    "Zaragoza" -- "Barcelona" [label="296"];
+    "Madrid" [xlabel="Madrid", labelloc="t"];
+    "Zaragoza" -- "Madrid" [label="325"];
+    "Madrid" [xlabel="Madrid", labelloc="t"];
+    "Gerona" [xlabel="Gerona", labelloc="t"];
+    "Madrid" -- "Gerona" [label="150"];
+    "Valladolid" [xlabel="Valladolid", labelloc="t"];
+    "Barcelona" [xlabel="Barcelona", labelloc="t"];
+    "Gerona" [xlabel="Gerona", labelloc="t"];
+    "Barcelona" -- "Gerona" [label="100"];
+    "Gerona" [xlabel="Gerona", labelloc="t"];
+}
