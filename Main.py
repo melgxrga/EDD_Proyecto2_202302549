@@ -16,26 +16,31 @@ from rutas import RutasFrame
 from BTree import BTree
 from controllers.vehiculos_controller import VehiculosController  # Importar VehiculosController directamente
 from controllers.rutas_controller import RutasController  # Importar RutasController
-from structures.listaAdyacencia import listaAdyacencia
-from structures.lista_enlazada import Vertice  # Importar Vertice
+from controllers.viajes_controller import ViajesController  # Importar ViajesController
+from controllers.clientes_controller import ClientesController  # Importar ClientesController
 
 def show_frame(frame):
     frame.tkraise()
 
 def main():
-            
     # Crear instancia del árbol B de orden 5
     orden_arbol = 5
     arbol = BTree(orden_arbol)
 
-    # Crear instancia del controlador de vehículos y pasarle el árbol B
+    # Crear instancias de controladores
+    clientes_controller = ClientesController()
     vehiculos_controller = VehiculosController(arbol)
-
-    # Crear instancia del controlador de rutas
     rutas_controller = RutasController()
 
+    # Crear instancia del controlador de viajes y pasarle los controladores necesarios
+    viajes_controller = ViajesController(rutas_controller, clientes_controller, vehiculos_controller)
+
+    # Imprimir datos para verificar
+    viajes_controller.imprimir_clientes()
+    viajes_controller.imprimir_vehiculos()
+
     root = tk.Tk()
-    root.title("Mi aplicación Tkinter")
+    root.title("Gestión de Transporte")
     window_width = 1500
     window_height = 800
     screen_width = root.winfo_screenwidth()
@@ -46,7 +51,7 @@ def main():
     root.resizable(False, False)
 
     # Cargar y redimensionar la imagen de fondo
-    original_image = Image.open("C:/Users/melga/OneDrive/Desktop/EDD_PROYECTO2_202302549/assets/fondo.jpg")
+    original_image = Image.open("C:/Users/melga/OneDrive/Desktop/EDD_Proyecto2_202302549/assets/fondo.jpg")
     resized_image = original_image.resize((window_width, window_height), Image.LANCZOS)
     background_image = ImageTk.PhotoImage(resized_image)
     background_label = tk.Label(root, image=background_image)
@@ -63,11 +68,11 @@ def main():
     inicio_background_label = tk.Label(inicio_frame, image=background_image)
     inicio_background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
-    # Crear instancias de cada frame y pasar el controlador de vehículos y rutas
-    clientes_frame = ClientesFrame(container)
+    # Crear instancias de cada frame y pasar el controlador correspondiente
+    clientes_frame = ClientesFrame(container, clientes_controller)
     vehiculos_frame = VehiculosFrame(container, vehiculos_controller)
     rutas_frame = RutasFrame(container, rutas_controller)
-    viajes_frame = ViajesFrame(container)
+    viajes_frame = ViajesFrame(container, viajes_controller)
 
     for frame in (inicio_frame, clientes_frame, vehiculos_frame, rutas_frame, viajes_frame):
         frame.place(relwidth=1, relheight=1)

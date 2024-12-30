@@ -76,3 +76,21 @@ class LinkedList:
                 return current
             current = current.next
         return None
+
+    def __iter__(self):
+        current = self.head
+        while current:
+            yield current.data
+            current = current.next
+            
+    def insertar_viaje_al_final(self, viaje) -> Node:
+            new_node = Node(viaje)
+            if not self.head:
+                self.head = new_node
+                self.tail = new_node
+            else:
+                new_node.prev = self.tail
+                self.tail.next = new_node
+                self.tail = new_node
+            self._size += 1
+            return new_node

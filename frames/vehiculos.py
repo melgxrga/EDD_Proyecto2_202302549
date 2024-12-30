@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, Toplevel
+from PIL import Image, ImageTk  # Necesario para manejar imágenes
 from controllers.vehiculos_controller import VehiculosController
+from structures.datos_vehiculo import DatosVehiculo  # Añadir esta línea
+
 
 class VehiculosFrame(tk.Frame):
     def __init__(self, parent, controller):
@@ -20,6 +23,12 @@ class VehiculosFrame(tk.Frame):
             self, text="Generar Graphviz", command=self.generar_graphviz, bg='#4CAF50', fg="white"
         )
         generar_graphviz_button.pack(pady=5)
+
+        # Botón para ver estructura
+        ver_estructura_button = tk.Button(
+            self, text="Ver Estructura", command=self.ver_estructura, bg='#4CAF50', fg="white"
+        )
+        ver_estructura_button.pack(pady=5)
         
         # Frame para agrupar los botones de acciones
         acciones_frame = tk.Frame(self, bg='#2e2e2e')
@@ -76,13 +85,14 @@ class VehiculosFrame(tk.Frame):
                         campos = linea.split(',')
                         if len(campos) == 4:  # Ajustado a 4 campos: placa, marca, modelo, precio
                             placa, marca, modelo, precio = campos
-                            # Crear e insertar el vehículo en el árbol B
-                            self.controller.crear_vehiculo(
-                                placa.strip(), 
-                                marca.strip(), 
-                                modelo.strip(), 
-                                float(precio.strip())
+                            # Crear objeto DatosVehiculo y añadirlo
+                            datos_vehiculo = DatosVehiculo(
+                                placa=placa.strip(), 
+                                marca=marca.strip(), 
+                                modelo=int(modelo.strip()),  # Convertir modelo a int
+                                precio=float(precio.strip())
                             )
+                            self.controller.crear_vehiculo(datos_vehiculo)
                         
             self.actualizar_lista_vehiculos_visual()
             self.controller.arbol.visualize('btree_final')
@@ -95,6 +105,14 @@ class VehiculosFrame(tk.Frame):
         # Generar la visualización del árbol B
         self.controller.arbol.visualize('btree_final')
         messagebox.showinfo("Éxito", "Visualización del árbol B generada correctamente.")
+
+    def ver_estructura(self):
+        try:
+            image_path = "C:/Users/melga/OneDrive/Desktop/EDD_Proyecto2_202302549/btree_final.png"
+            image = Image.open(image_path)
+            image.show()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo cargar la imagen: {e}")
 
     def crear_vehiculo_gui(self):
         self.mostrar_formulario(None, self.controller.crear_vehiculo)
@@ -138,7 +156,7 @@ class VehiculosFrame(tk.Frame):
             if vehiculo:
                 entradas['placa'].insert(0, vehiculo.placa)
                 entradas['marca'].insert(0, vehiculo.marca)
-                entradas['modelo'].insert(0, vehiculo.modelo)
+                entradas['modelo'].insert(0, str(vehiculo.modelo))  # Convertir a string
                 entradas['precio'].insert(0, vehiculo.precio)
 
             def on_submit():
@@ -146,14 +164,19 @@ class VehiculosFrame(tk.Frame):
                     # Get values from entries
                     placa = entradas['placa'].get().strip()
                     marca = entradas['marca'].get().strip()
-                    modelo = entradas['modelo'].get().strip()
+                    modelo_str = entradas['modelo'].get().strip()
                     precio_str = entradas['precio'].get().strip()
 
                     # Validate fields
-                    if not all([placa, marca, modelo, precio_str]):
+                    if not all([placa, marca, modelo_str, precio_str]):
                         messagebox.showwarning("Advertencia", "Todos los campos son obligatorios.")
                         return
-
+                    try:
+                        modelo = int(modelo_str)  # Convertir a int
+                    except ValueError:
+                        messagebox.showwarning("Advertencia", "El modelo debe ser un número válido.")
+                        return
+                    
                     try:
                         precio = float(precio_str)
                     except ValueError:
@@ -197,6 +220,7 @@ class VehiculosFrame(tk.Frame):
 
         except Exception as e:
             messagebox.showerror("Error", f"Error al crear el formulario: {str(e)}")
+
     def actualizar_lista_vehiculos_visual(self):
         """Actualiza la interfaz visual para mostrar los vehículos cargados."""
         self.vehiculo_list.delete(0, tk.END)
@@ -205,7 +229,6 @@ class VehiculosFrame(tk.Frame):
             # Changed from dictionary access to object attribute access
             vehiculo_str = f"Placa: {vehiculo.placa}, Marca: {vehiculo.marca}, Modelo: {vehiculo.modelo}, Precio: {vehiculo.precio}"
             self.vehiculo_list.insert(tk.END, vehiculo_str)
-
 
     def obtener_vehiculo_seleccionado(self):
         try:

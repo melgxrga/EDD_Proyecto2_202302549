@@ -1,21 +1,15 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, Toplevel
+from PIL import Image, ImageTk  # Necesario para manejar imágenes
 from controllers.clientes_controller import ClientesController, Cliente
 from structures.lista_circular_doble import ListaCircularDoble
-
-class DatosCliente:
-    def __init__(self, dpi='', nombres='', apellidos='', genero='', telefono='', direccion=''):
-        self.dpi = dpi
-        self.nombres = nombres
-        self.apellidos = apellidos
-        self.genero = genero
-        self.telefono = telefono
-        self.direccion = direccion
+from structures.datos_cliente import Cliente
 
 class ClientesFrame(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, clientes_controller):
         super().__init__(parent, bg='#2e2e2e')
-        self.controller = ClientesController()
+        self.controller = clientes_controller  # Utilizar la instancia pasada
+
         tk.Label(self, text="Gestión de Clientes", font=("Helvetica", 18), fg="white", bg='#2e2e2e').pack(pady=20)
         
         # Botón para cargar clientes desde un archivo TXT
@@ -29,6 +23,12 @@ class ClientesFrame(tk.Frame):
             self, text="Generar Graphviz", command=self.generar_graphviz, bg='#4CAF50', fg="white"
         )
         generar_graphviz_button.pack(pady=5)
+
+        # Botón para ver estructura
+        ver_estructura_button = tk.Button(
+            self, text="Ver Estructura", command=self.ver_estructura, bg='#4CAF50', fg="white"
+        )
+        ver_estructura_button.pack(pady=5)
         
         # Frame para agrupar los botones de acciones
         acciones_frame = tk.Frame(self, bg='#2e2e2e')
@@ -65,33 +65,45 @@ class ClientesFrame(tk.Frame):
         )
         self.client_list.pack(pady=10, fill='both', expand=True)
 
+        # Actualizar la lista visual al iniciar
+        self.actualizar_lista_visual()
+
     def cargar_clientes_txt(self):
-        # Limpiar la lista de clientes antes de cargar nuevos
-        self.controller.limpiar_clientes()
         # Abrir un cuadro de diálogo para seleccionar el archivo TXT
         file_path = filedialog.askopenfilename(
+            title="Seleccionar archivo de clientes",
             filetypes=[("Text files", "*.txt")]
         )
         if not file_path:
             return
         
-        with open(file_path, 'r', encoding='utf-8') as file:
-            datos = file.read().strip()
-            lineas = datos.split(';')
-            
-            for linea in lineas:
-                if linea.strip():
-                    campos = linea.split(',')
-                    if len(campos) == 6:
-                        dpi, nombres, apellidos, genero, telefono, direccion = campos
-                        self.controller.crear_cliente(
-                            dpi.strip(), nombres.strip(), apellidos.strip(), genero.strip(), telefono.strip(), direccion.strip()
-                        )
-        
-        # Actualizar la lista visual
-        self.actualizar_lista_visual()
-        # Imprimir clientes en consola para depuración
-        self.controller.imprimir_clientes()
+        try:
+            # Limpiar la lista de clientes antes de cargar nuevos
+            self.controller.limpiar_clientes()
+
+            with open(file_path, 'r', encoding='utf-8') as file:
+                lineas = file.readlines()
+                
+                for linea in lineas:
+                    if linea.strip():
+                        campos = linea.strip().split(',')
+                        if len(campos) == 6:
+                            dpi, nombres, apellidos, genero, telefono, direccion = campos
+                            self.controller.crear_cliente(
+                                dpi.strip(), nombres.strip(), apellidos.strip(),
+                                genero.strip(), telefono.strip(), direccion.strip()
+                            )
+                        else:
+                            print(f"Línea inválida en el archivo: {linea.strip()}")  # Depuración
+
+            # Actualizar la lista visual
+            self.actualizar_lista_visual()
+            # Imprimir clientes en consola para depuración
+            self.controller.imprimir_clientes()
+
+            messagebox.showinfo("Éxito", "Clientes cargados correctamente.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar clientes: {str(e)}")
 
     def actualizar_lista_visual(self):
         # Limpiar la lista visual
@@ -115,12 +127,76 @@ class ClientesFrame(tk.Frame):
         except FileNotFoundError:
             print("Error: Graphviz no está instalado o no está en el PATH del sistema.")
 
+    def ver_estructura(self):
+        try:
+            image_path = "C:/Users/melga/OneDrive/Desktop/EDD_Proyecto2_202302549/clientes.png"
+            image = Image.open(image_path)
+            image.show()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo cargar la imagen: {e}")
+
     def crear_cliente_gui(self):
-        datos = self.obtener_datos_cliente()
-        if datos:
-            self.controller.crear_cliente(datos.dpi, datos.nombres, datos.apellidos, datos.genero, datos.telefono, datos.direccion)
-            self.actualizar_lista_visual()
-            messagebox.showinfo("Éxito", "Cliente creado exitosamente.")
+        form = Toplevel(self)
+        form.title("Agregar Cliente")
+        form.geometry("300x400")
+        form.config(bg='#2e2e2e')
+
+        campos = ['DPI', 'Nombres', 'Apellidos', 'Género', 'Teléfono', 'Dirección']
+        entradas = {}
+
+        for campo in campos:
+            label = tk.Label(form, text=campo, fg="white", bg='#2e2e2e')
+            label.pack(pady=(10, 0))
+            entrada = tk.Entry(form, bg='#3e3e3e', fg="white")
+            entrada.pack(ipady=2, padx=20, fill='x')
+            entradas[campo.lower()] = entrada
+
+        def on_submit():
+            try:
+                dpi = entradas['dpi'].get().strip()
+                nombres = entradas['nombres'].get().strip()
+                apellidos = entradas['apellidos'].get().strip()
+                genero = entradas['género'].get().strip().upper()
+                telefono = entradas['teléfono'].get().strip()
+                direccion = entradas['dirección'].get().strip()
+
+                if not all([dpi, nombres, apellidos, genero, telefono, direccion]):
+                    messagebox.showwarning("Advertencia", "Todos los campos son obligatorios.")
+                    return
+
+                # Validaciones adicionales
+                if not dpi.isdigit():
+                    messagebox.showwarning("Advertencia", "El DPI debe contener solo números.")
+                    return
+                if genero not in ['M', 'F']:
+                    messagebox.showwarning("Advertencia", "El Género debe ser 'M' (Masculino) o 'F' (Femenino).")
+                    return
+
+                self.controller.crear_cliente(dpi, nombres, apellidos, genero, telefono, direccion)
+                self.actualizar_lista_visual()
+                form.destroy()
+                messagebox.showinfo("Éxito", "Cliente agregado correctamente.")
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al procesar el formulario: {str(e)}")
+
+        submit_button = tk.Button(
+            form, 
+            text="Guardar",
+            command=on_submit,
+            bg='#4CAF50',
+            fg="white"
+        )
+        submit_button.pack(pady=10)
+
+        cancel_button = tk.Button(
+            form,
+            text="Cancelar",
+            command=form.destroy,
+            bg='#f44336',
+            fg="white"
+        )
+        cancel_button.pack(pady=5)
 
     def mostrar_formulario_modificar(self):
         seleccionado = self.client_list.curselection()
@@ -130,15 +206,6 @@ class ClientesFrame(tk.Frame):
             self.mostrar_formulario(cliente_seleccionado, self.modificar_cliente_gui)
         else:
             messagebox.showwarning("Advertencia", "Seleccione un cliente para modificar.")
-
-    def mostrar_formulario_eliminar(self):
-        seleccionado = self.client_list.curselection()
-        if seleccionado:
-            indice = seleccionado[0]
-            cliente_seleccionado = self.controller.obtener_clientes()[indice]
-            self.eliminar_cliente_gui(cliente_seleccionado)
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un cliente para eliminar.")
 
     def mostrar_formulario(self, cliente, accion):
         form = Toplevel(self)
@@ -151,9 +218,9 @@ class ClientesFrame(tk.Frame):
 
         for campo in campos:
             label = tk.Label(form, text=campo.capitalize(), fg="white", bg='#2e2e2e')
-            label.pack()
+            label.pack(pady=(10, 0))
             entrada = tk.Entry(form, bg='#3e3e3e', fg="white")
-            entrada.pack()
+            entrada.pack(ipady=2, padx=20, fill='x')
             entradas[campo] = entrada
 
         if cliente:
@@ -165,18 +232,36 @@ class ClientesFrame(tk.Frame):
             entradas['direccion'].insert(0, cliente.direccion)
 
         def on_submit():
-            datos = DatosCliente(
-                dpi=entradas['dpi'].get().strip(),
-                nombres=entradas['nombres'].get().strip(),
-                apellidos=entradas['apellidos'].get().strip(),
-                genero=entradas['genero'].get().strip(),
-                telefono=entradas['telefono'].get().strip(),
-                direccion=entradas['direccion'].get().strip()
-            )
-            if not datos.dpi or not datos.nombres or not datos.apellidos or not datos.genero or not datos.telefono or not datos.direccion:
+            datos = {
+                'dpi': entradas['dpi'].get().strip(),
+                'nombres': entradas['nombres'].get().strip(),
+                'apellidos': entradas['apellidos'].get().strip(),
+                'genero': entradas['genero'].get().strip().upper(),
+                'telefono': entradas['telefono'].get().strip(),
+                'direccion': entradas['direccion'].get().strip(),
+            }
+
+            if not all(datos.values()):
                 messagebox.showwarning("Advertencia", "Todos los campos son obligatorios.")
                 return
-            accion(datos)
+
+            # Validaciones adicionales
+            if not datos['dpi'].isdigit():
+                messagebox.showwarning("Advertencia", "El DPI debe contener solo números.")
+                return
+            if datos['genero'] not in ['M', 'F']:
+                messagebox.showwarning("Advertencia", "El Género debe ser 'M' (Masculino) o 'F' (Femenino).")
+                return
+
+            datos_cliente = Cliente(
+                dpi=datos['dpi'],
+                nombres=datos['nombres'],
+                apellidos=datos['apellidos'],
+                genero=datos['genero'],
+                telefono=datos['telefono'],
+                direccion=datos['direccion']
+            )
+            accion(datos_cliente)
             form.destroy()
 
         submit_button = tk.Button(form, text="Guardar", command=on_submit, bg='#4CAF50', fg="white")
@@ -222,49 +307,3 @@ class ClientesFrame(tk.Frame):
             messagebox.showinfo("Información del Cliente", info)
         else:
             messagebox.showwarning("Advertencia", "Seleccione un cliente para ver la información.")
-
-    def obtener_datos_cliente(self):
-        datos = DatosCliente()
-        datos.dpi = self.custom_strip(self.dpi_entry.get())
-        datos.nombres = self.custom_strip(self.nombres_entry.get())
-        datos.apellidos = self.custom_strip(self.apellidos_entry.get())
-        datos.genero = self.custom_strip(self.genero_entry.get())
-        datos.telefono = self.custom_strip(self.telefono_entry.get())
-        datos.direccion = self.custom_strip(self.direccion_entry.get())
-
-        if not datos.dpi or not datos.nombres or not datos.apellidos or not datos.genero or not datos.telefono or not datos.direccion:
-            messagebox.showwarning("Advertencia", "Todos los campos son obligatorios.")
-            return None
-
-        return datos
-
-    def custom_strip(self, s):
-        # Implementación personalizada de strip
-        start = 0
-        end = len(s)
-        while start < end and s[start] in ' \t\n\r':
-            start += 1
-        while end > start and s[end - 1] in ' \t\n\r':
-            end -= 1
-        return s[start:end]
-
-    def custom_delete(self, entry):
-        # Implementación personalizada de delete
-        entry_var = entry.get()
-        entry_var = ""
-        entry.delete(0, tk.END)
-        entry.insert(0, entry_var)
-
-    def establecer_datos_cliente(self, cliente):
-        self.custom_delete(self.dpi_entry)
-        self.dpi_entry.insert(0, cliente.dpi)
-        self.custom_delete(self.nombres_entry)
-        self.nombres_entry.insert(0, cliente.nombres)
-        self.custom_delete(self.apellidos_entry)
-        self.apellidos_entry.insert(0, cliente.apellidos)
-        self.custom_delete(self.genero_entry)
-        self.genero_entry.insert(0, cliente.genero)
-        self.custom_delete(self.telefono_entry)
-        self.telefono_entry.insert(0, cliente.telefono)
-        self.custom_delete(self.direccion_entry)
-        self.direccion_entry.insert(0, cliente.direccion)

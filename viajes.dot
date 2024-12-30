@@ -1,0 +1,7 @@
+digraph G {
+rankdir=LR;
+node [shape=record];
+"1900394853392_origen" [label="{<prev> | Origen: Madrid | <next>}"];
+"1900394853392_destino" [label="{<prev> | Destino: Gerona\nDistancia: 150 km | <next>}"];
+"1900394853392_origen":next -> "1900394853392_destino":prev;
+}

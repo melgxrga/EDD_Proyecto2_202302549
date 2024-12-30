@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, Toplevel
 from controllers.rutas_controller import RutasController
 import os
+from PIL import Image
 
 class RutasFrame(tk.Frame):
     def __init__(self, parent, controller):
@@ -21,6 +22,12 @@ class RutasFrame(tk.Frame):
             self, text="Generar Graphviz", command=self.generar_graphviz, bg='#4CAF50', fg="white"
         )
         generar_graphviz_button.pack(pady=5)
+
+        # Botón para ver estructura
+        ver_estructura_button = tk.Button(
+            self, text="Ver Estructura", command=self.ver_estructura, bg='#4CAF50', fg="white"
+        )
+        ver_estructura_button.pack(pady=5)
                 
         # Frame para agrupar los botones de acciones
         acciones_frame = tk.Frame(self, bg='#2e2e2e')
@@ -92,6 +99,14 @@ class RutasFrame(tk.Frame):
         self.controller.generar_graphviz()
         os.system("neato -Tpng rutas.dot -o rutas.png")
         messagebox.showinfo("Éxito", "Archivo Graphviz generado correctamente.")
+
+    def ver_estructura(self):
+        try:
+            image_path = "C:/Users/melga/OneDrive/Desktop/EDD_Proyecto2_202302549/rutas.png"
+            image = Image.open(image_path)
+            image.show()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo cargar la imagen: {e}")
 
     def crear_ruta_gui(self):
         self.mostrar_formulario(None, self.controller.crear_ruta)
